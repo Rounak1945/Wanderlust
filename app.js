@@ -7,7 +7,8 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const mongo_url = "mongodb://127.0.0.1:27017/wanderlust";
 const wrapAsync = require("./utils/wrapAsync.js");
-const ExpressError = requir("./utils/ExpressError.js");
+const ExpressError = require("./utils/ExpressError.js");
+const {listingSchema} = require("./schema.js")
 
 app.set("veiw engine", "ejs");
 app.set("views", path.join(__dirname, "/views"));
@@ -15,6 +16,9 @@ app.use(express.static(path.join(__dirname, "/public")));
 app.use(express.urlencoded({extended: true})); 
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
+
+
+//For connecting to mongoose
 
 main()
 .then(() => {
@@ -28,6 +32,16 @@ async function main(){
     await mongoose.connect(mongo_url);
 }
 
+
+// function for server side validation using joy
+const validateListing = (req, res, next) => {
+    let result = listingSchema.validate(req.body);
+    if(result.error) {
+        let errMsg = result.error.details.map((el) => el.message).join(",");
+        throw new ExpressError(400, errMsg);
+    }
+    else next();
+}
 
 // Home route
 app.get("/", (req, res) => {
@@ -46,18 +60,17 @@ app.get("/listings/new", (req, res) => {
     res.render("listings/new.ejs");
 });
 
-// Create new route
-app.post("/listings", wrapAsync (async (req, res) => {
+// Create route
+app.post("/listings", 
+    validateListing,
+    wrapAsync (async (req, res) => {
     // let{title, description, image, price, country, location} = req.body;
     // let listing = req.body.listing;
-    if(!req.body.listing) {
-        throw new ExpressError(400, "Send Valid Data For Listing!");
-    }
+    
     const newListing = new Listing(req.body.listing);
     await newListing.save();
     res.redirect("/listings");
 }));
-
 // Show route
 app.get("/listings/:id", wrapAsync (async (req, res) =>{
     let {id} = req.params;
@@ -73,10 +86,9 @@ app.get("/listings/:id/edit", wrapAsync (async (req, res) => {
 }));
 
 // Update route
-app.put("/listings/:id", wrapAsync( async (req, res) => {
-    if(!req.body.listing) {
-        throw new ExpressError(400, "Send Valid Data For Listing!");
-    }
+app.put("/listings/:id", 
+    validateListing, 
+    wrapAsync( async (req, res) => {
     let {id} = req.params;
     await Listing.findByIdAndUpdate(id, {...req.body.listing});
     res.redirect(`/listings/${id}`);
@@ -94,9 +106,10 @@ app.all("*", (req, res, next) => {
     next(new ExpressError(404, "Page Not Found!"));
 });
 
+// costom error handler
 app.use((err, req, res, next) => {
     let {statusCode = 500, message = "Something went Wrong!"} = err;
-    res.status(statusCode).send(message);
+    res.status(statusCode).render("error.ejs", {message});
 });
 
 app.listen(8080, () => {
