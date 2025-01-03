@@ -1,0 +1,18 @@
+<% if(success.length) { %>
+<div class="alert alert-success alert-dismissible fade show col-6 offset-3 mt-3" role="alert">
+    <%= success %>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<% } %>
+<% if(error.length) { %>
+    <div class="alert alert-danger alert-dismissible fade show col-6 offset-3 mt-3" role="alert">
+        <%= error %>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+<% } %>
+
+<!-- We are using success.length because success is ans array -->
