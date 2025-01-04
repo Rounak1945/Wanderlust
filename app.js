@@ -10,12 +10,18 @@ const ExpressError = require("./utils/ExpressError.js");
 const {listingSchema, reviewSchema} = require("./schema.js");
 
 // Requiring routers
-const listings = require("./routes/listing.js");
-const reviews = require("./routes/review.js");
+const listingRouter = require("./routes/listing.js");
+const reviewRouter = require("./routes/review.js");
+const userRouter = require("./routes/user.js");
 
 // requiring session
 const session = require("express-session");
 const flash = require("connect-flash");
+
+// requiring passport for authentication and authorization
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user.js");
 
 
 
@@ -56,12 +62,21 @@ const sessionOptions = {
 app.use(session(sessionOptions));
 app.use(flash());
 
+// After session we have to use passport because passport uses session
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser()); // storing user related data into session
+passport.deserializeUser(User.deserializeUser()); // destoring user related data into session
+
 // Middleware for flash messeges
 app.use((req, res, next) => {
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error");
+    res.locals.currUser = req.user;
     next();
 })
+
 
 // Home route
 app.get("/", (req, res) => {
@@ -69,9 +84,11 @@ app.get("/", (req, res) => {
 })
 
 // For routes starts with "/listings"
-app.use("/listings", listings);
+app.use("/listings", listingRouter);
 // For routes starts with "/listings/:id/reviews"
-app.use("/listings/:id/reviews", reviews);
+app.use("/listings/:id/reviews", reviewRouter);
+// For routes starts with "/listings/:id/reviews"
+app.use("/", userRouter);
 
 app.all("*", (req, res, next) => {
     next(new ExpressError(404, "Page Not Found!"));
@@ -86,3 +103,9 @@ app.use((err, req, res, next) => {
 app.listen(8080, () => {
     console.log("Listning on port: 8080");
 })
+
+
+
+// Adding passport
+// npm i passport
+// npm i passport-local

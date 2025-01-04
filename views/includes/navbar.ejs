@@ -9,5 +9,14 @@
         <a class="nav-item nav-link" href="/listings">All listings</a>
         <a class="nav-item nav-link" href="/listings/new">Add new listing</a>
       </div>
+      <div class="navbar-nav ml-auto">
+        <% if(!currUser) { %>
+          <a class="nav-item nav-link" href="/signup">Sign Up</a>
+          <a class="nav-item nav-link" href="/login">Log In</a>
+        <% } %>
+        <% if(currUser) { %>
+          <a class="nav-item nav-link" href="/logout">LogOut</a>
+        <% } %>
+      </div>
     </div>
   </nav>
