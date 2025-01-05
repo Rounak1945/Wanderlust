@@ -1,0 +1,8 @@
+MVC (Model, View, Controller) design pattern or Framework
+
+Model :- Core fuctionalities of databses
+View :- Core fuctionalities of Forntend
+controller :- Core fuctionality of backend (contains different callbacks)
+
+
+More readable code format
